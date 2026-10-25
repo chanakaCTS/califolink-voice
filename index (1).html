@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Califolink Logistics - Voice Entry</title>
+<style>
+*{box-sizing:border-box}
+:root{--nv:#0a2a5e;--gr:#1e9e57}
+body{font:15px system-ui,sans-serif;background:#eef3f8;margin:0;color:#1b1f24}
+header{background:var(--nv);border-bottom:4px solid var(--gr);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+header b{font-size:21px}header b span{color:#5fd79a}header small{display:block;opacity:.8}
+#usr{font-size:13px;display:none}
+#usr button{margin:0 0 0 8px;padding:4px 10px;background:transparent;border:1px solid #fff;font-size:12px}
+main{padding:12px;max-width:1400px;margin:0 auto}
+.c{background:#fff;border:1px solid #d3dde8;border-radius:12px;padding:14px;margin-bottom:12px}
+h2{margin:0 0 8px;font-size:17px;color:var(--nv)}
+label{display:block;font-size:12px;color:#667085;margin:8px 0 3px}
+input,select{width:100%;padding:9px;border:1px solid #cfd8e3;border-radius:8px;font:inherit;background:#fff;min-width:0}
+button{margin-top:10px;padding:10px 16px;border:0;border-radius:8px;background:var(--gr);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+button.n{background:var(--nv)}button.o{background:#fff;color:var(--nv);border:1px solid var(--nv)}
+button:disabled{opacity:.6}
+#lg{max-width:380px;margin:30px auto}
+#pick{display:flex;gap:10px;flex-wrap:wrap}
+#pick button{flex:1;min-width:140px;padding:18px;font-size:17px;background:#fff;color:var(--gr);border:2px solid var(--gr);margin:0}
+#work{display:none;grid-template-columns:1fr;gap:12px}
+@media(min-width:900px){#work{grid-template-columns:420px 1fr}}
+/* chat */
+#chat{display:flex;flex-direction:column;height:min(640px,78vh);padding:0;overflow:hidden}
+#ch{background:var(--nv);color:#fff;padding:9px 12px;display:flex;justify-content:space-between;align-items:center}
+#ch button{margin:0;padding:3px 9px;background:transparent;border:1px solid #fff;font-size:12px}
+#co{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:6px 10px;background:#f4f7fb;font-size:12px;color:#445}
+#co select{width:auto;padding:3px;font-size:12px}
+#co label{display:inline-flex;align-items:center;gap:4px;margin:0;font-size:12px;color:#445}
+#co input{width:auto}
+#msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.am{max-width:86%;padding:8px 11px;border-radius:12px;white-space:pre-wrap;word-break:break-word}
+.am.u{align-self:flex-end;background:var(--nv);color:#fff}
+.am.b{align-self:flex-start;background:#e8eef6}
+.am.s{align-self:center;background:#fff3cd;color:#6b5200;font-size:12px}
+#inp{display:flex;gap:6px;padding:8px;border-top:1px solid #e3e6ea;align-items:center}
+#inp input{flex:1}
+#inp button{margin:0}
+#mic{width:48px;height:48px;border-radius:50%;padding:0;font-size:22px}
+#mic.on{background:#c0392b;animation:pulse 1.1s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(192,57,43,.2)}}
+@media(prefers-reduced-motion:reduce){#mic.on{animation:none}}
+/* form */
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0 12px}
+.st{display:inline-block;margin-left:10px;padding:6px 12px;border-radius:20px;background:#eee;font-weight:600}
+.CHKD{background:#d4f4e2;color:#0b6b3a}.RTN{background:#fde0dc;color:#b3261e}
+#bar{margin-bottom:6px;font-weight:600}
+#bar a{margin-left:10px;font-weight:400;color:var(--gr);cursor:pointer;text-decoration:underline}
+#note{margin-top:8px;font-weight:600}
+</style></head><body>
+<header>
+<div><b>Califolink <span>Logistics</span></b><small>Job Check - Voice Entry</small></div>
+<div id="usr"></div>
+</header>
+<main>
+<div class="c" id="lg">
+<h2>🔐 Login</h2>
+<label>Username</label><input id="lu" autocomplete="username">
+<label>Password</label><input id="lp" type="password" autocomplete="current-password">
+<button id="lb">Login</button>
+<div id="lm" style="margin-top:8px;font-weight:600"></div>
+</div>
+
+<div class="c" id="pickc" style="display:none">
+<h2>Job select karanna</h2>
+<div id="pick"><button data-c="Dankotuwa">Dankotuwa</button><button data-c="Royal FW">Royal FW</button></div>
+</div>
+
+<div id="work">
+<div class="c" id="chat">
+  <div id="ch"><b>🤖 AI Assistant</b><button id="rst">New invoice</button></div>
+  <div id="co">
+    <select id="lang"><option value="en-US">🎙 English</option><option value="si-LK">🎙 සිංහල</option></select>
+    <label><input type="checkbox" id="hf"> Hands-free</label>
+    <label><input type="checkbox" id="spk"> 🔊 Speak</label>
+  </div>
+  <div id="msgs"></div>
+  <div id="inp">
+    <button id="mic" class="n" title="Speak">🎙</button>
+    <input id="txt" placeholder="Type here or press 🎙" autocomplete="off">
+    <button id="snd">Send</button>
+  </div>
+</div>
+
+<div class="c">
+  <h2>📋 Job Check Entry</h2>
+  <div id="bar"></div>
+  <div class="g" id="f"></div>
+  <datalist id="custList"></datalist>
+  <button id="sv">Save</button><span class="st" id="st">JOB STATUS: -</span>
+  <div id="note"></div>
+</div>
+</div>
+</main>
+
+<script>
+/* ====== SETTINGS ====== */
+const API_URL='https://script.google.com/macros/s/AKfycbwrrN6_JmcDbWk6h5tszNLooMwhsw91UjdiUTLHINshsWfMmEwWYZrP8_q3tkWh2I_n/exec';
+
+const $=i=>document.getElementById(i), v=i=>$(i).value;
+const ls=(k,x)=>{try{if(x===undefined)return localStorage.getItem(k)||'';if(x===null)localStorage.removeItem(k);else localStorage.setItem(k,x)}catch(e){}return ''};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const today=()=>new Date().toISOString().slice(0,10);
+
+let TOK=ls('vt_t'),USER=ls('vt_u'),ROLE=ls('vt_r'),company='',CUSTS=[],hist=[],busy=false;
+
+async function api(fn,args){
+  const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args})});
+  const j=await r.json();
+  if(!j.ok){
+    if(String(j.error).indexOf('AUTH')>=0){logout('Session expired, please log in again')}
+    throw new Error(j.error);
+  }
+  return j.data;
+}
+
+/* ====== FORM ====== */
+const pgs=['✅'].concat([1,2,3,4,5,6,7,8,9,10].map(n=>'❌ Pg '+(n<10?'0':'')+n));
+const F=[
+['job','JOB NO','text'],['jbDate','JB DATE','date'],['veh','VEH NO','text'],['driver','Driver','text'],
+['rout','ROUTE',['Whr Hs','Dnktw','RFPL']],['customer','CUSTOMER','cust'],['cusCode','CUS CODE',['B2B','Dealer','Other','Showroom']],['inv','INV NO','text'],['pg','ALL Pg',pgs],['amount','AMOUNT','number'],
+['seal','CUSTOMER SEAL',['✅ Cus','✅ Whr Hs','✅ DPL,Col 7 Sgntr Shrm','✅ DPL, Krlpn Mngr','✅ DPL, Acc Dprtmn','✅ DPL, Gen Strs','✅ DPL, Strs Mngr','✅ DPL, Procmnt','✅ E-ml Conf','✅ One Glfc Mngr','✅ Rtn in Dnktw','❌ Cus','❌ Security','❌ Whr HS','❌ Cus Dif Seal']],
+['chkDate','CHK DATE','date'],['type','JOB TYPE',['✅ Original','✅ Photocopy with Seal','✅ Both','✅ Gate Pass only','❌ Photocopy']],
+['remarks','REMARKS','text'],['handover','Handover To','text']];
+const KEEP=['job','jbDate','customer','cusCode','veh','driver','rout','handover'];
+
+(function build(){
+  const f=$('f');
+  F.forEach(x=>{
+    const w=document.createElement('div'),l=document.createElement('label');l.textContent=x[1];
+    let e;
+    if(Array.isArray(x[2])){e=document.createElement('select');e.innerHTML='<option value="">-- select --</option>'+x[2].map(o=>'<option>'+esc(o)+'</option>').join('')}
+    else if(x[2]==='cust'){e=document.createElement('input');e.setAttribute('list','custList');e.autocomplete='off';e.placeholder='type to search'}
+    else{e=document.createElement('input');e.type=x[2];if(x[2]==='number')e.step='any'}
+    e.id=x[0];e.onchange=calc;w.appendChild(l);w.appendChild(e);f.appendChild(w);
+  });
+  $('chkDate').value=today();
+})();
+
+function status(){const a=[v('pg'),v('seal'),v('type')];
+  if(a.some(s=>s.indexOf('❌')===0))return'RTN';
+  if(a.every(s=>s.indexOf('✅')===0))return'CHKD';return''}
+function calc(){const s=status(),e=$('st');e.textContent='JOB STATUS: '+(s||'-');e.className='st '+s}
+function collect(){const d={company:company};F.forEach(x=>{d[x[0]]=v(x[0])});return d}
+function clearForm(full){
+  const k=v('chkDate');
+  F.forEach(x=>{if(full===true||KEEP.indexOf(x[0])<0)$(x[0]).value=''});
+  $('chkDate').value=k||today();calc();
+}
+function note(t){$('note').textContent=t}
+
+/* ====== LOGIN / JOB ====== */
+function logout(msg){
+  ls('vt_t',null);ls('vt_u',null);ls('vt_r',null);TOK='';company='';stopMic();
+  $('work').style.display='none';$('pickc').style.display='none';$('usr').style.display='none';
+  $('lg').style.display='block';$('lm').textContent=msg||'';
+}
+async function start(){
+  $('lg').style.display='none';
+  if(ROLE==='viewer'){logout('Viewer access walata voice entry nehe');return}
+  const u=$('usr');u.style.display='block';u.innerHTML='👤 '+esc(USER)+' ('+esc(ROLE)+') <button id="lo">Logout</button>';
+  $('lo').onclick=()=>logout('');
+  $('pickc').style.display='block';
+  try{
+    const l=await api('getCustomers',[TOK]);
+    CUSTS=['Other','N/A'].concat((l||[]).filter(n=>n!=='Other'&&n!=='N/A'));
+    $('custList').innerHTML=CUSTS.map(n=>'<option value="'+esc(n)+'">').join('');
+  }catch(e){note('❌ '+e.message)}
+}
+$('lb').onclick=async function(){
+  const b=this;b.disabled=true;$('lm').textContent='⏳ ...';
+  try{
+    const r=await api('login',[v('lu'),v('lp')]);
+    TOK=r.token;USER=r.user;ROLE=r.role;ls('vt_t',TOK);ls('vt_u',USER);ls('vt_r',ROLE);$('lp').value='';$('lm').textContent='';start();
+  }catch(e){$('lm').textContent='❌ '+e.message}
+  b.disabled=false;
+};
+$('lp').onkeydown=e=>{if(e.key==='Enter')$('lb').click()};
+
+function pickJob(c){
+  company=c;$('pickc').style.display='none';$('work').style.display='grid';
+  $('bar').innerHTML='Job: '+esc(c)+' <a id="chg">change</a>';
+  $('chg').onclick=()=>{company='';stopMic();$('work').style.display='none';$('pickc').style.display='block'};
+  hist=[];$('msgs').innerHTML='';
+  add('b',c+' select kala. Invoice eka kiyawanna patan ganna, mama ek ek ahannam.');
+}
+$('pick').onclick=e=>{const c=e.target.getAttribute('data-c');if(c)pickJob(c)};
+
+/* ====== CHAT ====== */
+function add(cls,t){const d=document.createElement('div');d.className='am '+cls;d.textContent=t;$('msgs').appendChild(d);$('msgs').scrollTop=1e9;return d}
+$('rst').onclick=()=>{stopMic();hist=[];$('msgs').innerHTML='';add('b','Aluth invoice ekak. Patan gamu.')};
+
+const fieldSpec=()=>F.map(x=>{const a=Array.isArray(x[2]);return{key:x[0],label:x[1],type:a?'select':(x[2]==='cust'?'customer':x[2]),options:a?x[2]:undefined}});
+
+function applyFill(r){
+  const fl=r.fill||{};
+  F.forEach(x=>{
+    const k=x[0];if(fl[k]===undefined||fl[k]===null)return;
+    let val=String(fl[k]),m;
+    if(Array.isArray(x[2])){m=x[2].filter(o=>o.toLowerCase()===val.toLowerCase())[0];if(!m&&val!=='')return;val=m||''}
+    else if(x[2]==='cust'){m=CUSTS.filter(o=>o.toLowerCase()===val.toLowerCase())[0];if(!m&&val!=='')return;val=m||''}
+    const el=$(k);el.value=val;el.style.outline='2px solid #1e9e57';setTimeout(()=>{el.style.outline=''},2500);
+  });
+  calc();
+}
+
+function speak(t,cb){
+  if(!$('spk').checked||!window.speechSynthesis){cb&&cb();return}
+  const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.onend=u.onerror=()=>{cb&&cb()};
+  speechSynthesis.cancel();speechSynthesis.speak(u);
+}
+
+let viaVoice=false;
+async function send(text){
+  text=String(text||'').trim();
+  if(!text||busy||!company)return;
+  stopMic();add('u',text);$('txt').value='';
+  hist.push({role:'user',content:text});
+  busy=true;const wait=add('b','⏳ ...');
+  const wasVoice=viaVoice;viaVoice=false;
+  try{
+    const r=await api('aiAssist',[TOK,{messages:hist,fields:fieldSpec(),customers:CUSTS,form:collect(),company:company}]);
+    wait.remove();hist.push({role:'assistant',content:r.raw});
+    applyFill(r);add('b',r.reply||'(no reply)');
+    busy=false;
+    if(r.action==='save'){
+      const ok=await save();
+      if(ok){hist=[];add('s','✅ Saved. Next invoice ekata yamu.')}
+      speak(r.reply);
+    }else{
+      speak(r.reply,()=>{if(wasVoice&&$('hf').checked)startMic()});
+    }
+  }catch(e){
+    busy=false;wait.remove();hist.pop();add('s','❌ '+e.message);
+  }
+}
+$('snd').onclick=()=>send($('txt').value);
+$('txt').onkeydown=e=>{if(e.key==='Enter')send($('txt').value)};
+
+/* ====== SAVE ====== */
+async function save(){
+  const d=collect();
+  if(!company){note('Job select karanna');return false}
+  if(!d.job){note('❌ JOB NO ona');add('s','JOB NO eka naththam save karanna ba');return false}
+  if(d.customer&&CUSTS.indexOf(d.customer)<0){note('❌ CUSTOMER eka list eken select karanna');add('s','CUSTOMER eka list eken select karanna');return false}
+  $('sv').disabled=true;note('⏳ Saving...');
+  try{
+    const st=await api('saveEntry',[TOK,d]);
+    note('✅ Saved ('+(st||'Pending')+')');clearForm();return true;
+  }catch(e){note('❌ '+e.message);add('s','❌ Save fail: '+e.message);return false}
+  finally{$('sv').disabled=false}
+}
+$('sv').onclick=save;
+
+/* ====== MICROPHONE ====== */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null,listening=false;
+function stopMic(){if(rec&&listening){try{rec.stop()}catch(e){}}}
+function startMic(){
+  if(!SR){add('s','Me browser eka speech recognition support karanne na. Chrome (PC / Android) use karanna.');return}
+  if(listening||busy||!company)return;
+  rec=new SR();rec.lang=v('lang');rec.interimResults=true;rec.continuous=false;
+  let finalText='';
+  rec.onstart=()=>{listening=true;$('mic').classList.add('on')};
+  rec.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++){t+=e.results[i][0].transcript;if(e.results[i].isFinal)finalText=t}$('txt').value=t};
+  rec.onerror=e=>{
+    if(e.error==='not-allowed'||e.error==='service-not-allowed')
+      add('s','🎙 Mic permission block. Address bar eke 🔒 icon eka click karala Microphone = Allow karanna, passe page eka reload karanna.');
+    else if(e.error!=='no-speech'&&e.error!=='aborted')add('s','🎙 Mic error: '+e.error);
+  };
+  rec.onend=()=>{listening=false;$('mic').classList.remove('on');if(finalText){viaVoice=true;send(finalText)}};
+  try{rec.start()}catch(e){}
+}
+$('mic').onclick=()=>{listening?stopMic():startMic()};
+
+if(TOK)start();
+</script>
+</body></html>
