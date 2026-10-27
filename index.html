@@ -48,8 +48,13 @@ button:disabled{opacity:.6}
 .st{display:inline-block;margin-left:10px;padding:6px 12px;border-radius:20px;background:#eee;font-weight:600}
 .CHKD{background:#d4f4e2;color:#0b6b3a}.RTN{background:#fde0dc;color:#b3261e}
 #bar{margin-bottom:6px;font-weight:600}
-#bar a{margin-left:10px;font-weight:400;color:var(--gr);cursor:pointer;text-decoration:underline}
+#bar a,#vbar a{margin-left:10px;font-weight:400;color:var(--gr);cursor:pointer;text-decoration:underline}
 #note{margin-top:8px;font-weight:600}
+/* viewer table */
+.tw{overflow:auto;max-height:520px}
+table{border-collapse:collapse;font-size:12px;width:100%}
+th,td{border:1px solid #e0e6ee;padding:5px 7px;white-space:nowrap;text-align:left}
+th{background:#f4f7fb;position:sticky;top:0}
 </style></head><body>
 <header>
 <div><b>Califolink <span>Logistics</span></b><small>Job Check - Voice Entry</small></div>
@@ -65,7 +70,7 @@ button:disabled{opacity:.6}
 </div>
 
 <div class="c" id="pickc" style="display:none">
-<h2>Job select karanna</h2>
+<h2>Select a job</h2>
 <div id="pick"><button data-c="Dankotuwa">Dankotuwa</button><button data-c="Royal FW">Royal FW</button></div>
 </div>
 
@@ -85,13 +90,19 @@ button:disabled{opacity:.6}
   </div>
 </div>
 
-<div class="c">
+<div class="c" id="fcard">
   <h2>📋 Job Check Entry</h2>
   <div id="bar"></div>
   <div class="g" id="f"></div>
   <datalist id="custList"></datalist>
   <button id="sv">Save</button><span class="st" id="st">JOB STATUS: -</span>
   <div id="note"></div>
+</div>
+
+<div class="c" id="vcard" style="display:none">
+  <h2>🔎 Job Records <span id="vbar" style="font-size:13px"></span></h2>
+  <div style="display:flex;gap:6px"><input id="vq" placeholder="Search job no, customer, vehicle..."><button id="vs" style="margin:0">Search</button></div>
+  <div class="tw" id="vt" style="margin-top:10px"></div>
 </div>
 </div>
 </main>
@@ -154,16 +165,16 @@ function note(t){$('note').textContent=t}
 
 /* ====== LOGIN / JOB ====== */
 function logout(msg){
-  ls('vt_t',null);ls('vt_u',null);ls('vt_r',null);TOK='';company='';stopMic();
+  ls('vt_t',null);ls('vt_u',null);ls('vt_r',null);TOK='';ROLE='';company='';stopMic();
   $('work').style.display='none';$('pickc').style.display='none';$('usr').style.display='none';
   $('lg').style.display='block';$('lm').textContent=msg||'';
 }
 async function start(){
   $('lg').style.display='none';
-  if(ROLE==='viewer'){logout('Viewer access walata voice entry nehe');return}
   const u=$('usr');u.style.display='block';u.innerHTML='👤 '+esc(USER)+' ('+esc(ROLE)+') <button id="lo">Logout</button>';
   $('lo').onclick=()=>logout('');
   $('pickc').style.display='block';
+  if(ROLE==='viewer')return;
   try{
     const l=await api('getCustomers',[TOK]);
     CUSTS=['Other','N/A'].concat((l||[]).filter(n=>n!=='Other'&&n!=='N/A'));
@@ -180,18 +191,42 @@ $('lb').onclick=async function(){
 };
 $('lp').onkeydown=e=>{if(e.key==='Enter')$('lb').click()};
 
+function backToPick(){company='';stopMic();$('work').style.display='none';$('pickc').style.display='block'}
 function pickJob(c){
   company=c;$('pickc').style.display='none';$('work').style.display='grid';
-  $('bar').innerHTML='Job: '+esc(c)+' <a id="chg">change</a>';
-  $('chg').onclick=()=>{company='';stopMic();$('work').style.display='none';$('pickc').style.display='block'};
+  const vw=ROLE==='viewer';
+  $('fcard').style.display=vw?'none':'block';
+  $('vcard').style.display=vw?'block':'none';
+  const h='Job: '+esc(c)+' <a class="chg">change</a>';
+  $('bar').innerHTML=h;$('vbar').innerHTML=h;
+  document.querySelectorAll('.chg').forEach(a=>{a.onclick=backToPick});
+  $('rst').textContent=vw?'Clear chat':'New invoice';
   hist=[];$('msgs').innerHTML='';
-  add('b',c+' select kala. Invoice eka kiyawanna patan ganna, mama ek ek ahannam.');
+  if(vw){
+    add('b',c+' records. Ask me anything, e.g. "status of job 1234?" or "total amount for customer X?"');
+    loadRows('');
+  }else{
+    add('b',c+' selected. Start reading the invoice and I will ask you one field at a time.');
+  }
 }
 $('pick').onclick=e=>{const c=e.target.getAttribute('data-c');if(c)pickJob(c)};
 
+/* ====== VIEWER: records table ====== */
+async function loadRows(q){
+  const box=$('vt');box.textContent='⏳ ...';
+  try{
+    const r=await api('aiAssist',[TOK,{mode:'rows',company:company,q:q}]);
+    if(!r.rows.length){box.textContent='No rows found';return}
+    box.innerHTML='<table><tr>'+r.headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr>'+
+      r.rows.map(x=>'<tr>'+x.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</table>';
+  }catch(e){box.textContent='❌ '+e.message}
+}
+$('vs').onclick=()=>loadRows(v('vq'));
+$('vq').onkeydown=e=>{if(e.key==='Enter')loadRows(v('vq'))};
+
 /* ====== CHAT ====== */
 function add(cls,t){const d=document.createElement('div');d.className='am '+cls;d.textContent=t;$('msgs').appendChild(d);$('msgs').scrollTop=1e9;return d}
-$('rst').onclick=()=>{stopMic();hist=[];$('msgs').innerHTML='';add('b','Aluth invoice ekak. Patan gamu.')};
+$('rst').onclick=()=>{stopMic();hist=[];$('msgs').innerHTML='';add('b',ROLE==='viewer'?'Chat cleared. Ask me anything.':'New invoice. Let\'s start.')};
 
 const fieldSpec=()=>F.map(x=>{const a=Array.isArray(x[2]);return{key:x[0],label:x[1],type:a?'select':(x[2]==='cust'?'customer':x[2]),options:a?x[2]:undefined}});
 
@@ -222,13 +257,19 @@ async function send(text){
   busy=true;const wait=add('b','⏳ ...');
   const wasVoice=viaVoice;viaVoice=false;
   try{
+    if(ROLE==='viewer'){
+      const a=await api('aiAssist',[TOK,{messages:hist,company:company}]);
+      wait.remove();hist.push({role:'assistant',content:a.reply});add('b',a.reply||'(no reply)');
+      busy=false;speak(a.reply,()=>{if(wasVoice&&$('hf').checked)startMic()});
+      return;
+    }
     const r=await api('aiAssist',[TOK,{messages:hist,fields:fieldSpec(),customers:CUSTS,form:collect(),company:company}]);
     wait.remove();hist.push({role:'assistant',content:r.raw});
     applyFill(r);add('b',r.reply||'(no reply)');
     busy=false;
     if(r.action==='save'){
       const ok=await save();
-      if(ok){hist=[];add('s','✅ Saved. Next invoice ekata yamu.')}
+      if(ok){hist=[];add('s','✅ Saved. Ready for the next invoice.')}
       speak(r.reply);
     }else{
       speak(r.reply,()=>{if(wasVoice&&$('hf').checked)startMic()});
@@ -243,14 +284,14 @@ $('txt').onkeydown=e=>{if(e.key==='Enter')send($('txt').value)};
 /* ====== SAVE ====== */
 async function save(){
   const d=collect();
-  if(!company){note('Job select karanna');return false}
-  if(!d.job){note('❌ JOB NO ona');add('s','JOB NO eka naththam save karanna ba');return false}
-  if(d.customer&&CUSTS.indexOf(d.customer)<0){note('❌ CUSTOMER eka list eken select karanna');add('s','CUSTOMER eka list eken select karanna');return false}
+  if(!company){note('Please select a job');return false}
+  if(!d.job){note('❌ JOB NO is required');add('s','JOB NO is required to save.');return false}
+  if(d.customer&&CUSTS.indexOf(d.customer)<0){note('❌ Please select the CUSTOMER from the list');add('s','Please select the CUSTOMER from the list.');return false}
   $('sv').disabled=true;note('⏳ Saving...');
   try{
     const st=await api('saveEntry',[TOK,d]);
     note('✅ Saved ('+(st||'Pending')+')');clearForm();return true;
-  }catch(e){note('❌ '+e.message);add('s','❌ Save fail: '+e.message);return false}
+  }catch(e){note('❌ '+e.message);add('s','❌ Save failed: '+e.message);return false}
   finally{$('sv').disabled=false}
 }
 $('sv').onclick=save;
@@ -260,7 +301,7 @@ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let rec=null,listening=false;
 function stopMic(){if(rec&&listening){try{rec.stop()}catch(e){}}}
 function startMic(){
-  if(!SR){add('s','Me browser eka speech recognition support karanne na. Chrome (PC / Android) use karanna.');return}
+  if(!SR){add('s','This browser does not support speech recognition. Please use Chrome (PC or Android).');return}
   if(listening||busy||!company)return;
   rec=new SR();rec.lang=v('lang');rec.interimResults=true;rec.continuous=false;
   let finalText='';
@@ -268,7 +309,7 @@ function startMic(){
   rec.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++){t+=e.results[i][0].transcript;if(e.results[i].isFinal)finalText=t}$('txt').value=t};
   rec.onerror=e=>{
     if(e.error==='not-allowed'||e.error==='service-not-allowed')
-      add('s','🎙 Mic permission block. Address bar eke 🔒 icon eka click karala Microphone = Allow karanna, passe page eka reload karanna.');
+      add('s','🎙 Microphone permission is blocked. Click the 🔒 icon in the address bar, set Microphone to Allow, then reload the page.');
     else if(e.error!=='no-speech'&&e.error!=='aborted')add('s','🎙 Mic error: '+e.error);
   };
   rec.onend=()=>{listening=false;$('mic').classList.remove('on');if(finalText){viaVoice=true;send(finalText)}};
